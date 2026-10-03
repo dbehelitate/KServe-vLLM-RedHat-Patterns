@@ -1,4 +1,4 @@
-## Four approaches to deploy Ai on Kubernetes 
+## Four approaches to Serve Ai on Kubernetes 
 
 We will use vLLM and KServe to learn about some importants Kubernetes overlooked concepts.  
 Thanks to RED HAT for teaching me about these tips and tricks.
