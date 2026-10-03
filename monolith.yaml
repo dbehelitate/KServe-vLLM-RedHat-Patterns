@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      containers:
+      - name: vllm
+        image: vllm/vllm-openai:latest
+        resources:
+          limits:
+            cpu: '4'
+            memory: 12Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 6Gi
+        env:
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: huggingface-secret
+              key: token
+        args: [
+          "--port",
+          "8080",
+          "--model",
+          "meta-llama/Meta-Llama-3-8B",
+          "--download-dir",
+          "/models-cache"
+        ]
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        volumeMounts:
+        - name: models-cache
+          mountPath: /models-cache
+      volumes:
+      - name: models-cache
+        persistentVolumeClaim:
+          claimName: vllm-models-cache
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vllm-models-cache
+spec:
+  accessModes:
+  - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 100Gi
