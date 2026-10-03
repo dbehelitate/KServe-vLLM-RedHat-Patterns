@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llm-server
+spec:
+  containers:
+    - name: main
+      image: vllm/vllm-openai:latest # Immagine di runtime per servire il modello, in questo caso vLLM
+      args:
+        - "--served-model-name"
+        - "meta-llama/Meta-Llama-3-8B"
+        - "--model"
+        - "/mnt/models" # Specifica un percorso assoluto al modello montato come argomento di avvio per vLLM
+      volumeMounts:
+        - name: model-volume
+          mountPath: /mnt/models # Monta il contenuto dell'immagine OCI all'interno di /mnt/models
+          subPath: models # Monta solo una sottodirectory specifica invece dell'intera radice dell'immagine (struttura tipica modelcar)
+  volumes:
+    - name: model-volume
+      image: # "image:" è il tipo di volume per montare un'immagine OCI. Si applicano le normali logiche di pull
+        reference: quay.io/meta-llama/meta-llama-3.2-8b
+        pullPolicy: IfNotPresent # La politica di pull può essere specificata esplicitamente (di default scarica solo se non presente, tranne con tag :latest)
