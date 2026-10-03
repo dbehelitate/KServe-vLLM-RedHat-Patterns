@@ -1,0 +1,38 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      initContainers:
+        - name: copy-model-data
+          image: quay.io/rhuss/qwen2.5-0.5b-instruct:latest # Immagine OCI con i dati del modello Qwen 2.5 in /models
+          command:
+            - "sh"
+            - "-c"
+            - "cp -a /models/. /mnt/models" # Copia i dati da /models a /mnt/models (può richiedere tempo in base alla dimensione)
+          volumeMounts:
+            - name: models
+              mountPath: /mnt/models # Montaggio del volume emptyDir nell'init-container per ricevere i dati
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:latest
+          args:
+            - "--served-model-name"
+            - "Qwen/Qwen2.5-0.5B-Instruct"
+            - "--model"
+            - "/mnt/models" # Esegue vLLM configurato per accedere al modello salvato in /mnt/models
+          volumeMounts:
+            - name: models
+              mountPath: /mnt/models # Condivide la stessa directory nel container principale per accedere ai dati copiati
+      volumes:
+        - name: models
+          emptyDir: {} # Dichiarazione del volume per una directory temporanea allocata localmente sul nodo
