@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: llama-3-8b-pv
+spec:
+  capacity:
+    storage: 20Gi # Capacità totale di storage del PersistentVolume (PV)
+  accessModes:
+    - ReadOnlyMany # Permette a più pod di montare il volume contemporaneamente in sola lettura
+  persistentVolumeReclaimPolicy: Retain # Mantiene i dati quando la PVC viene eliminata (previene la cancellazione accidentale del modello)
+  nfs: # NFS è usato qui come esempio; si possono configurare altri filesystem distribuiti (Ceph, AWS EFS, Azure Files, Google Cloud Filestore, ecc.)
+    server: nfs-server.example.com
+    path: /exports/models/llama-3-8b
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llama-3-8b-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadOnlyMany # La PVC deve richiedere una modalità di accesso compatibile con il PV
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: llama-pvc
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: pytorch
+      storageUri: pvc://llama-3-8b-pvc/ # Riferimento alla PVC tramite nome. KServe monta la PVC direttamente nel container del modello su /mnt/models
