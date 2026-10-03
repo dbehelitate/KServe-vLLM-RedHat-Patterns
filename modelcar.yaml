@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sklearn-iris-oci-predictor-00001-deployment-7fd9c7fc67-dzdsz
+  namespace: default
+spec:
+  shareProcessNamespace: true
+  containers:
+    - name: kserve-container # Runtime di serving che esegue il modello fornito dal modelcar
+      image: kserve/sklearnserver
+      args:
+        - --model_name=sklearn-iris-oci
+        - --model_dir=/mnt/models
+      volumeMounts:
+        - mountPath: /mnt # Monta la directory locale condivisa su /mnt per accedere al modello da /mnt/models
+          name: kserve-provision-location
+    - name: modelcar
+      image: rhuss/kserving-example-sklearn:1.0 # Immagine modelcar che contiene i dati del modello
+      args:
+        - sh
+        - -c
+        - ln -s /proc/$$$$/root/models /mnt/models && sleep infinity # Crea un link simbolico /mnt/models che punta al root filesystem del modelcar tramite procfs ($$$$ diventa $$ nello shell). Poi va in sleep infinito per tenere vivo il container.
+      volumeMounts:
+        - mountPath: /mnt
+          name: kserve-provision-location
+  volumes:
+    - name: kserve-provision-location
+      emptyDir: {} # Dichiarazione del volume emptyDir condiviso e referenziato sia dal serving runtime che dal modelcar
