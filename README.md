@@ -5,10 +5,10 @@ Thanks to RED HAT for teaching me about these tips and tricks.
 
 <img width="729" height="328" alt="Screenshot_2026-10-03_15-47-19" src="https://github.com/user-attachments/assets/315af07c-0398-468d-86b9-aaa8111aa21e" />
 
-### -initContainers + emptyDir 
-### -PVC for shared storage
-### -ModelCars with OCI container
-### -Image Volume (Kubernetes v1.35)
+### -initContainers + emptyDir : to copy many Ai Models on many Pods / Nodes
+### -PVC for shared storage: to share a single Model on many Replicas (no copy direct read)
+### -ModelCars with OCI container: make a KServe container with vLLM runtime read a Model Container with no copy in between adding a SymLink to emptyDir rather than copy paste inside it.
+### -Image Volume (Kubernetes v1.35) : new beta and official feature to mount models as volumes 
 
 
 <img width="742" height="571" alt="Screenshot_2026-10-03_16-02-58" src="https://github.com/user-attachments/assets/444db7c2-a067-48cb-8970-3ee2d5812c80" />
